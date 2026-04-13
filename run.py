@@ -22,7 +22,7 @@ def show_smns_banner(did, status):
    ╚════██║██║╚██╔╝██║██║╚██╗██║╚════██║
    ███████║██║ ╚═╝ ██║██║ ╚████║███████║
    ╚══════╝╚═╝     ╚═╝╚═╝  ╚═══╝╚══════╝
-      >>> {C_YELLOW}VOUCHER BYPASS SYSTEM v2.0{C_CYAN} <<< {C_RESET}
+      >>> {C_YELLOW}SMNS BYPASS SYSTEM v1.0{C_CYAN} <<< {C_RESET}
     """
     print(banner)
     
@@ -31,7 +31,7 @@ def show_smns_banner(did, status):
     # ပိုကျယ်သော Box Border (Width တိုးထားသည်)
     print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
     print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
-    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}STATUS{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
+    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}EXPIRE{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
 
 def main():
