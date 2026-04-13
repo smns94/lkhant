@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 SECRET_SALT = "ohmygod@123"
-TOKEN = "8669797151:AAfmU46t3CHkqfcvLt0iOyfDRErCkXoBRnw"
+TOKEN = "8105499487:AAHXrV-jMr1S9NPEuj35fbUhtbb6V3k6b54"
 ADMIN_ID = 7731566362
 
 def generate_key(device_id, expiry):
