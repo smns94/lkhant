@@ -58,8 +58,8 @@ def main():
     
     # {:<11} ဖြင့် space ယူထားသောကြောင့် Colon (:) များ အပေါ်အောက် ကွက်တိညီသွားမည်
     info_box = f"""{C}┌──────────────────────────────────────────────┐
-│  {G}{'DEVICE ID':<11}{W} : {Y}{device_id}{W}                  {C}│
-│  {G}{'EXPIRY DATE':<11}{W} : {G}{expiry_date}{W}           {C}│
+  {G}{'DEVICE ID':<11}{W} : {Y}{device_id}{W}                  {C}
+  {G}{'EXPIRY DATE':<11}{W} : {G}{expiry_date}{W}           {C}
 └──────────────────────────────────────────────┘{W}"""
     
     print(get_center(info_box))
