@@ -50,7 +50,7 @@ def main():
     
     print(f"\n {C}┌──────────────────────────────────────────────┐{W}")
     print(f" {C}│{W}  {G}DEVICE ID{W} : {Y}{device_id}{W}                  {C}│{W}")
-    print(f" {C}│{W}  {G}STATUS{W}    : {G}  (EXP: {expiry_date}){W}   {C}│{W}")
+    print(f" {C}│{W}  {G}STATUS{W}    : {G}(EXP: {expiry_date}){W}      {C}│{W}")
     print(f" {C}└──────────────────────────────────────────────┘{W}")
     
     time.sleep(1)
