@@ -3,6 +3,7 @@ import sys
 import time
 import shutil
 import re
+import uuid
 
 # --- အရောင်သတ်မှတ်ချက်များ (RGB Style) ---
 C = '\033[38;2;0;255;255m'    # Cyan (Main Title)
@@ -30,6 +31,13 @@ def get_center(text):
         centered_lines.append(" " * padding + line)
     return '\n'.join(centered_lines)
 
+def get_device_id():
+    # ဖုန်း hardware ပေါ်မူတည်ပြီး Unique ID ထုတ်ပေးခြင်း
+    # ရှေ့တွင် SMNS- ဟု အမြဲပေါ်နေပါမည်
+    node = uuid.getnode()
+    unique_id = uuid.UUID(int=node).hex[-10:].upper()
+    return f"SMNS-{unique_id}"
+
 def display_banner():
     clear_screen()
     
@@ -53,13 +61,13 @@ def main():
     display_banner()
     
     # --- Device Info Section ---
-    device_id = "TRB-49417534BE"
+    device_id = get_device_id()
     expiry_date = "2027-04-13 12:25:00"
     
-    # {:<11} ဖြင့် space ယူထားသောကြောင့် Colon (:) များ အပေါ်အောက် ကွက်တိညီသွားမည်
+    # {:<11} ဖြင့် Colon (:) များ အပေါ်အောက် ကွက်တိညှိထားပါသည်
     info_box = f"""{C}┌──────────────────────────────────────────────┐
-   {G}{'DEVICE ID':<11}{W} : {Y}{device_id}{W}                  {C}
-  {G}{'EXPIRY DATE':<11}{W} : {G}{expiry_date}{W}           {C}
+│  {G}{'DEVICE ID':<11}{W} : {Y}{device_id}{W}           {C}│
+│  {G}{'EXPIRY DATE':<11}{W} : {G}{expiry_date}{W}           {C}│
 └──────────────────────────────────────────────┘{W}"""
     
     print(get_center(info_box))
