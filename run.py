@@ -49,8 +49,8 @@ def main():
     expiry_date = "2027-04-13 12:25:00"
     
     print(f"\n {C}┌──────────────────────────────────────────────┐{W}")
-    print(f" {C}│{W}  {G}DEVICE ID{W} : {Y}{device_id}{W}             {C}│{W}")
-    print(f" {C}│{W}  {G}STATUS{W}   : {G}ACTIVATED (EXP: {expiry_date}){W} {C}│{W}")
+    print(f" {C}│{W}  {G}DEVICE ID{W} : {Y}{device_id}{W}                {C}│{W}")
+    print(f" {C}│{W}  {G}STATUS{W}   : {G}✅ (EXP: {expiry_date}){W} {C}│{W}")
     print(f" {C}└──────────────────────────────────────────────┘{W}")
     
     time.sleep(1)
