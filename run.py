@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import shutil
+import re
 
 # --- အရောင်သတ်မှတ်ချက်များ (RGB Style) ---
 C = '\033[38;2;0;255;255m'    # Cyan (Main Title)
@@ -14,11 +15,19 @@ W = '\033[0m'                 # White / Reset
 def clear_screen():
     os.system('clear')
 
+def strip_ansi(text):
+    # အရောင် code တွေကို ဖယ်ပြီး စာသားအစစ်အရှည်ကိုပဲ တွက်ဖို့ဖြစ်ပါတယ်
+    return re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', text)
+
 def get_center(text):
-    # စာသားကို Screen ရဲ့ အလယ်ဗဟို ပို့ပေးတဲ့ function
     term_width = shutil.get_terminal_size().columns
     lines = text.split('\n')
-    centered_lines = [line.center(term_width) for line in lines]
+    centered_lines = []
+    for line in lines:
+        # အရောင် code တွေမပါတဲ့ အရှည်ကိုယူပြီး padding တွက်ပါတယ်
+        visible_length = len(strip_ansi(line))
+        padding = (term_width - visible_length) // 2
+        centered_lines.append(" " * padding + line)
     return '\n'.join(centered_lines)
 
 def display_banner():
@@ -32,26 +41,28 @@ def display_banner():
   ▒   ██▒ ▒██    ▒██ ▓██▒  ▐▌██▒  ▒   ██▒
 ▒██████▒▒ ▒██▒   ░██▒▒██░   ▓██░▒██████▒▒
 ▒ ▒▓▒ ▒ ░ ░ ▒░   ░  ░░ ▒░   ▒ ▒ ▒ ▒▓▒ ▒ ░
-░ ░▒  ░ ░ ░  ░      ░░ ░░   ░ ▒░░ ░▒  ░ ░
-{W}"""
+░ ░▒  ░ ░ ░  ░      ░░ ░░   ░ ▒░░ ░▒  ░ ░{W}"""
     
     sub_title = f"{M}>>> SMNS VOUCHER BYPASS TOOLKIT <<<{W}"
     
     print(get_center(smns_art))
-    print(get_center(sub_title))
+    print(get_center(sub_title)) # အခု ဒါက အလယ်ကို ကွက်တိရောက်သွားပါပြီ
     print(f"{C}" + "━" * shutil.get_terminal_size().columns + f"{W}")
 
 def main():
     display_banner()
     
     # --- Device Info Section ---
-    device_id = "TRB-49417534BE" # ဒီနေရာမှာ အစ်ကို့ logic အတိုင်း ID ဆွဲထုတ်ခိုင်းပါ
+    device_id = "TRB-49417534BE"
     expiry_date = "2027-04-13 12:25:00"
     
-    print(f"\n {C}┌──────────────────────────────────────────────┐{W}")
-    print(f" {C}│{W}  {G}DEVICE ID{W} : {Y}{device_id}{W}                  {C}│{W}")
-    print(f" {C}│{W}  {G}STATUS{W}    : {G}(EXP: {expiry_date}){W}      {C}│{W}")
-    print(f" {C}└──────────────────────────────────────────────┘{W}")
+    # Info Box ကိုလည်း အလယ်ပို့ချင်ရင် get_center ထဲ ထည့်လို့ရပါတယ်
+    info_box = f"""{C}┌──────────────────────────────────────────────┐
+│  {G}DEVICE ID{W} : {Y}{device_id}{W}                  {C}│
+│  {G}STATUS{W}    : {G}(EXP: {expiry_date}){W}      {C}│
+└──────────────────────────────────────────────┘{W}"""
+    
+    print(get_center(info_box))
     
     time.sleep(1)
     print(f"\n{G}[✓] Auto-logged in with saved key.{W}")
@@ -59,14 +70,12 @@ def main():
     
     print(f"{Y}[*] STAGE 1: EXECUTING INSTANT BYPASS (VOUCHER INJECTION){W}")
     
-    # Loading animation အတိုလေး (ပိုလှအောင်)
     for i in range(3):
         print(f"{Y}.{W}", end="", flush=True)
         time.sleep(0.5)
     
     print(f"\n\n{G}[+] INTERNET ACCESS ACTIVE. AI OPTIMIZER ENABLED!{W}")
     
-    # ဒီနေရာမှာ အစ်ကို့ရဲ့ နောက်ထပ် function တွေကို ဆက်ရေးလို့ရပါပြီ
     print(f"\n{C}Press Enter to exit...{W}")
     input()
 
