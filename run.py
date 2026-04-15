@@ -22,7 +22,7 @@ def show_smns_banner(did, status):
    ╚════██║██║╚██╔╝██║██║╚██╗██║╚════██║
    ███████║██║ ╚═╝ ██║██║ ╚████║███████║
    ╚══════╝╚═╝     ╚═╝╚═╝  ╚═══╝╚══════╝
-      >>> {C_YELLOW}SMNS BYPASS SYSTEM v1.0{C_CYAN} <<< {C_RESET}
+      >>> {C_YELLOW}SMNS VOUCHER BYPASS SYSTEM {C_CYAN} <<< {C_RESET}
     """
     print(banner)
     
@@ -48,7 +48,7 @@ def main():
             # သိမ်းထားသော Key ဖြင့် Auto-login စမ်းသပ်ခြင်း
             is_valid, msg, expiry = core.validate_key(did, saved_key)
             if is_valid:
-                show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
+                show_smns_banner(did, f"ACTIVATED (EXP: {expiry})")
                 print(f"\n{C_GREEN}[✓] Auto-logged in with saved key.{C_RESET}")
                 core.start_process()
                 return
@@ -67,7 +67,7 @@ def main():
             with open(KEY_FILE, "w") as f:
                 f.write(key)
                 
-            show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
+            show_smns_banner(did, f"ACTIVATED (EXP: {expiry})")
             print(f"\n{C_GREEN}[+] Key Activated & Saved Successfully!{C_RESET}")
             core.start_process() 
         else:
