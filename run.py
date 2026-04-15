@@ -30,8 +30,8 @@ def show_smns_banner(did, status):
     
     # ပိုကျယ်သော Box Border (Width တိုးထားသည်)
     print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
-    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}        ║{C_RESET}")
-    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}EXPIRED{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}  ║{C_RESET}")
+    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
+    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}EXPIRED{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
 
 def main():
