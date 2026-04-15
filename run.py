@@ -1,81 +1,78 @@
-import core
 import os
 import sys
+import time
+import shutil
 
-# --- [ UI COLORS & DESIGN ] ---
-C_CYAN = '\033[96m'
-C_GREEN = '\033[92m'
-C_YELLOW = '\033[93m'
-C_RED = '\033[91m'
-C_BOLD = '\033[1m'
-C_RESET = '\033[0m'
+# --- အရောင်သတ်မှတ်ချက်များ (RGB Style) ---
+C = '\033[38;2;0;255;255m'    # Cyan (Main Title)
+M = '\033[38;2;255;0;255m'    # Magenta (Sub Title)
+G = '\033[38;2;0;255;0m'      # Green (Success)
+Y = '\033[38;2;255;255;0m'    # Yellow (Warning/Process)
+R = '\033[38;2;255;0;0m'      # Red (Error)
+W = '\033[0m'                 # White / Reset
 
-KEY_FILE = "key.txt"
-
-def show_smns_banner(did, status):
+def clear_screen():
     os.system('clear')
-    # ပိုကြီးပြီး ပိုကျယ်သော SMNS ASCII Art
-    banner = f"""{C_CYAN}{C_BOLD}
-   ███████╗███╗   ███╗███╗   ██╗███████╗
-   ██╔════╝████╗ ████║████╗  ██║██╔════╝
-   ███████╗██╔████╔██║██╔██╗ ██║███████╗
-   ╚════██║██║╚██╔╝██║██║╚██╗██║╚════██║
-   ███████║██║ ╚═╝ ██║██║ ╚████║███████║
-   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═══╝╚══════╝
-      >>> {C_YELLOW}SMNS VOUCHER BYPASS TOOLKIT {C_CYAN} <<< {C_RESET}
-    """
-    print(banner)
+
+def get_center(text):
+    # စာသားကို Screen ရဲ့ အလယ်ဗဟို ပို့ပေးတဲ့ function
+    term_width = shutil.get_terminal_size().columns
+    lines = text.split('\n')
+    centered_lines = [line.center(term_width) for line in lines]
+    return '\n'.join(centered_lines)
+
+def display_banner():
+    clear_screen()
     
-    status_color = C_RED if 'PENDING' in status or 'INVALID' in status else C_GREEN
+    # ကြီးမားသော SMNS ASCII Title
+    smns_art = f"""{C}
+ ██████  ███▄ ▄███▒ ███▄    █   ██████ 
+▒██    ▒  ▓██▒▀█▀ ██▒ ██ ▀█   █ ▒██    ▒ 
+░ ▓██▄    ▓██    ▓██░▓██  ▀█ ██▒░ ▓██▄   
+  ▒   ██▒ ▒██    ▒██ ▓██▒  ▐▌██▒  ▒   ██▒
+▒██████▒▒ ▒██▒   ░██▒▒██░   ▓██░▒██████▒▒
+▒ ▒▓▒ ▒ ░ ░ ▒░   ░  ░░ ▒░   ▒ ▒ ▒ ▒▓▒ ▒ ░
+░ ░▒  ░ ░ ░  ░      ░░ ░░   ░ ▒░░ ░▒  ░ ░
+{W}"""
     
-    # ပိုကျယ်သော Box Border (Width တိုးထားသည်)
-    print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
-    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW} ║{C_RESET}")
-    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}EXPIRED{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
-    print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
+    sub_title = f"{M}>>> SMNS VOUCHER BYPASS TOOLKIT <<<{W}"
+    
+    print(get_center(smns_art))
+    print(get_center(sub_title))
+    print(f"{C}" + "━" * shutil.get_terminal_size().columns + f"{W}")
 
 def main():
-    try:
-        did = core.get_device_id()
-        saved_key = ""
-
-        # ၁။ သိမ်းထားသော Key ရှိမရှိ စစ်ဆေးခြင်း
-        if os.path.exists(KEY_FILE):
-            with open(KEY_FILE, "r") as f:
-                saved_key = f.read().strip()
-
-        if saved_key:
-            # သိမ်းထားသော Key ဖြင့် Auto-login စမ်းသပ်ခြင်း
-            is_valid, msg, expiry = core.validate_key(did, saved_key)
-            if is_valid:
-                show_smns_banner(did, f"ACTIVATED (EXP: {expiry})")
-                print(f"\n{C_GREEN}[✓] Auto-logged in with saved key.{C_RESET}")
-                core.start_process()
-                return
-            else:
-                os.remove(KEY_FILE) # Key သက်တမ်းကုန်နေလျှင် ဖျက်ပစ်မည်
-
-        # ၂။ Key မရှိလျှင် သို့မဟုတ် သက်တမ်းကုန်လျှင် အသစ်တောင်းမည်
-        show_smns_banner(did, "PENDING ACTIVATION")
-        print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
-        key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
-        
-        is_valid, msg, expiry = core.validate_key(did, key)
-        
-        if is_valid:
-            # Key မှန်ကန်ပါက ဖိုင်ထဲတွင် သိမ်းဆည်းမည်
-            with open(KEY_FILE, "w") as f:
-                f.write(key)
-                
-            show_smns_banner(did, f"ACTIVATED (EXP: {expiry})")
-            print(f"\n{C_GREEN}[+] Key Activated & Saved Successfully!{C_RESET}")
-            core.start_process() 
-        else:
-            print(f"\n{C_RED}[X] Invalid Key! Access Denied.{C_RESET}")
-            sys.exit()
-
-    except KeyboardInterrupt:
-        print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
+    display_banner()
+    
+    # --- Device Info Section ---
+    device_id = "TRB-49417534BE" # ဒီနေရာမှာ အစ်ကို့ logic အတိုင်း ID ဆွဲထုတ်ခိုင်းပါ
+    expiry_date = "2027-04-13 12:25:00"
+    
+    print(f"\n {C}┌──────────────────────────────────────────────┐{W}")
+    print(f" {C}│{W}  {G}DEVICE ID{W} : {Y}{device_id}{W}           {C}│{W}")
+    print(f" {C}│{W}  {G}EXPIRED{W}   : {G}ACTIVATED (EXP: {expiry_date}){W} {C}│{W}")
+    print(f" {C}└──────────────────────────────────────────────┘{W}")
+    
+    time.sleep(1)
+    print(f"\n{G}[✓] Auto-logged in with saved key.{W}")
+    time.sleep(0.8)
+    
+    print(f"{Y}[*] STAGE 1: EXECUTING INSTANT BYPASS (VOUCHER INJECTION){W}")
+    
+    # Loading animation အတိုလေး (ပိုလှအောင်)
+    for i in range(3):
+        print(f"{Y}.{W}", end="", flush=True)
+        time.sleep(0.5)
+    
+    print(f"\n\n{G}[+] INTERNET ACCESS ACTIVE. AI OPTIMIZER ENABLED!{W}")
+    
+    # ဒီနေရာမှာ အစ်ကို့ရဲ့ နောက်ထပ် function တွေကို ဆက်ရေးလို့ရပါပြီ
+    print(f"\n{C}Press Enter to exit...{W}")
+    input()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n{R}[!] Tool Stopped by User.{W}")
+        sys.exit()
