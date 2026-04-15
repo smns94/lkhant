@@ -59,7 +59,7 @@ def main():
     # Info Box ကိုလည်း အလယ်ပို့ချင်ရင် get_center ထဲ ထည့်လို့ရပါတယ်
     info_box = f"""{C}┌──────────────────────────────────────────────┐
 │  {G}DEVICE ID{W} : {Y}{device_id}{W}                  {C}│
-│  {G}STATUS{W}    : {G}(EXP: {expiry_date}){W}      {C}│
+│  {G}EXPIRY DATE{W}    : {G}{expiry_date}{W}      {C}│
 └──────────────────────────────────────────────┘{W}"""
     
     print(get_center(info_box))
