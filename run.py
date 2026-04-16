@@ -18,8 +18,6 @@ C_RESET = '\033[0m'
 
 def show_smns_banner(did, status):
     os.system('clear')
-    
-    # SMNS Logo ကို Center ချိန်ရန် Space ထည့်ထားသည်
     banner = f"""{C_CYAN}{C_BOLD}
           ███████╗███╗   ███╗███╗   ██╗███████╗
           ██╔════╝████╗ ████║████╗  ██║██╔════╝
@@ -34,7 +32,6 @@ def show_smns_banner(did, status):
     
     status_color = C_GREEN if 'EXP:' in status or 'VERIFIED' in status else C_RED
     
-    # Information Box (ပိုကျယ်ပြီး Center ကျအောင် ညှိထားသည်)
     print(f"   {C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
     print(f"   {C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"   {C_YELLOW}║{C_RESET} {C_CYAN}STATUS{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
@@ -49,8 +46,7 @@ def extract_expiry(key):
 
 def check_online_key(key):
     try:
-        # User တွေ အဆင်ပြေအောင် timeout ကို နည်းနည်းတိုးထားပေးတယ်
-        r = requests.get(DB_URL, timeout=10)
+        r = requests.get(DB_URL, timeout=8)
         if r.status_code == 200:
             keys = [l.strip() for l in r.text.splitlines() if l.strip()]
             return (key.strip() in keys)
@@ -60,47 +56,42 @@ def check_online_key(key):
 
 def main():
     try:
-        # Device ID ရယူခြင်း
-        try:
-            did = core.get_device_id()
-        except:
-            did = "TRB-UNKNOWN-ID"
-            
-        # ၁။ Bypass အရင်လုပ်မည်
-        show_smns_banner(did, "INITIALIZING BYPASS...")
-        core.start_process()
-        time.sleep(2)
-        
-        # ၂။ Key Validation 
+        did = core.get_device_id()
         saved_key = ""
         if os.path.exists(KEY_FILE):
             with open(KEY_FILE, "r") as f:
                 saved_key = f.read().strip()
 
-        while True:
-            if not saved_key:
-                show_smns_banner(did, "PENDING ACTIVATION")
-                print(f"\n   {C_CYAN}[?] Enter Activation Key to Unlock System{C_RESET}")
-                saved_key = input(f"   {C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
+        # --- [ STEP 1: KEY CHECK FIRST ] ---
+        # သိမ်းထားတဲ့ Key ရှိရင် Online မှာ အရင်စစ်မယ် (Bypass မလုပ်ခင် အရင်လုပ်မယ်)
+        if saved_key:
+            # အင်တာနက်မရှိရင်တောင် Expire Date ကို Key ထဲကနေ ကြိုထုတ်ထားမယ်
+            exp = extract_expiry(saved_key)
+            show_smns_banner(did, f"VERIFIED (EXP: {exp})")
+        else:
+            show_smns_banner(did, "PENDING ACTIVATION")
+            print(f"\n   {C_CYAN}[?] Enter Activation Key{C_RESET}")
+            saved_key = input(f"   {C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
 
-            # Online စစ်ဆေးခြင်း
-            if check_online_key(saved_key):
-                exp = extract_expiry(saved_key)
-                with open(KEY_FILE, "w") as f:
-                    f.write(saved_key)
-                
-                # အောင်မြင်ပါက Banner ကို Update လုပ်မည်
-                show_smns_banner(did, f"VERIFIED (EXP: {exp})")
-                print(f"\n   {C_GREEN}[✓] LOGIN SUCCESSFUL! SYSTEM READY.{C_RESET}")
-                
-                # အစ်ကို့ရဲ့ Menu ကို ဒီအောက်မှာ ဆက်သွားပါ
-                # core.main_menu()
-                break
-            else:
-                print(f"\n   {C_RED}[X] Invalid or Expired Key! Access Denied.{C_RESET}")
-                if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
-                saved_key = ""
-                sys.exit()
+        # --- [ STEP 2: BYPASS START ] ---
+        # Banner မှာ Expire ပေါ်နေချိန်မှာ Bypass ကို စတင်မယ်
+        print(f"\n   {C_CYAN}[*] Starting Bypass Process...{C_RESET}")
+        core.start_process()
+
+        # --- [ STEP 3: FINAL VERIFICATION ] ---
+        # Bypass လုပ်လို့ အင်တာနက်ရလာပြီဆိုမှ Key ကို Online မှာ အတည်ပြုမယ်
+        time.sleep(2)
+        if check_online_key(saved_key):
+            with open(KEY_FILE, "w") as f:
+                f.write(saved_key)
+            # အောင်မြင်ရင် Banner ကို တစ်ခေါက် ထပ် Update လုပ်မယ်
+            exp = extract_expiry(saved_key)
+            show_smns_banner(did, f"VERIFIED (EXP: {exp})")
+            print(f"\n   {C_GREEN}[✓] SYSTEM READY. LOGIN SUCCESSFUL!{C_RESET}")
+        else:
+            print(f"\n   {C_RED}[X] Access Denied! Invalid Key.{C_RESET}")
+            if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
+            sys.exit()
 
     except Exception as e:
         print(f"\n   {C_RED}[!] Error: {e}{C_RESET}")
