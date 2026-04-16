@@ -9,7 +9,7 @@ from datetime import datetime
 DB_URL = "https://raw.githubusercontent.com/smns94/lkhant/refs/heads/main/database.txt"
 KEY_FILE = "key.txt"
 
-# --- [ UI COLORS & DESIGN ] ---
+# --- [ UI COLORS ] ---
 C_CYAN = '\033[96m'
 C_GREEN = '\033[92m'
 C_YELLOW = '\033[93m'
@@ -30,7 +30,8 @@ def show_smns_banner(did, status):
     """
     print(banner)
     
-    status_color = C_RED if 'PENDING' in status or 'INVALID' in status else C_GREEN
+    # Status မှာ Expire ပါရင် အစိမ်းရောင်ပြမယ်
+    status_color = C_GREEN if 'EXP:' in status or 'VERIFIED' in status else C_RED
     
     print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
     print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
@@ -38,23 +39,23 @@ def show_smns_banner(did, status):
     print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
 
 def extract_expiry(key):
-    # Key ရဲ့ နောက်ဆုံး ၁၂ လုံးက ရက်စွဲဖြစ်လို့ ဖြတ်ယူပြီး Format ပြောင်းတာပါ
     try:
-        raw_date = key[-12:]
-        formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]} {raw_date[8:10]}:{raw_date[10:12]}"
-        return formatted_date
+        # Key ရဲ့ နောက်ဆုံး ၁၂ လုံးကို ယူပါတယ်
+        raw_date = key.strip()[-12:]
+        # ပုံစံဖော်ခြင်း: DD/MM/YYYY
+        formatted = f"{raw_date[6:8]}/{raw_date[4:6]}/{raw_date[:4]}"
+        return formatted
     except:
-        return "UNKNOWN"
+        return "N/A"
 
 def check_online_key(key):
     try:
-        r = requests.get(DB_URL, timeout=7)
+        r = requests.get(DB_URL, timeout=10)
         if r.status_code == 200:
             approved_keys = [line.strip() for line in r.text.splitlines() if line.strip()]
             if key.strip() in approved_keys:
-                return True, "VERIFIED"
-            return False, "INVALID KEY"
-        return False, "SERVER ERROR"
+                return True, "SUCCESS"
+        return False, "INVALID"
     except:
         return False, "OFFLINE"
 
@@ -67,13 +68,12 @@ def main():
             with open(KEY_FILE, "r") as f:
                 saved_key = f.read().strip()
 
-        # ၁။ အရင်ဆုံး Bypass အမြဲလုပ်မယ် (Portal ကျော်ရန်)
+        # ၁။ Bypass အရင်လုပ်မယ်
         show_smns_banner(did, "INITIALIZING BYPASS...")
-        print(f"\n{C_CYAN}[*] Running Bypass Tasks... Please wait.{C_RESET}")
         core.start_process()
-        time.sleep(3)
+        time.sleep(2)
 
-        # ၂။ Key Validation
+        # ၂။ Key Validation Loop
         while True:
             if not saved_key:
                 show_smns_banner(did, "PENDING ACTIVATION")
@@ -83,30 +83,33 @@ def main():
             is_valid, status = check_online_key(saved_key)
 
             if is_valid:
-                # Expire Date ကို Key ထဲကနေ ထုတ်ယူမယ်
-                exp_date = extract_expiry(saved_key)
+                # Expire Date ထုတ်ယူမယ်
+                exp = extract_expiry(saved_key)
                 
+                # Key ကို သိမ်းမယ်
                 with open(KEY_FILE, "w") as f:
                     f.write(saved_key)
                 
-                show_smns_banner(did, f"VERIFIED (EXP: {exp_date})")
-                print(f"\n{C_GREEN}[✓] Access Granted! Status: Active.{C_RESET}")
-                # core.main_menu() # လိုအပ်လျှင် ဒီမှာခေါ်ပါ
-                return
+                # *** Banner ကို အသစ်ပြန်ပြမယ် (ဒီနေရာမှာ Expire ပေါ်လာမှာပါ) ***
+                show_smns_banner(did, f"VERIFIED (EXP: {exp})")
+                print(f"\n{C_GREEN}[✓] Access Granted! Enjoy your service.{C_RESET}")
+                
+                # တကယ့် process ကို ဒီမှာ ခေါ်ပါ (ဥပမာ Menu)
+                # core.main_menu() 
+                break
             else:
                 if status == "OFFLINE":
-                    print(f"\n{C_YELLOW}[!] Still Offline. Retrying Bypass...{C_RESET}")
+                    print(f"\n{C_YELLOW}[!] Offline. Re-Bypassing...{C_RESET}")
                     core.start_process()
-                    time.sleep(5)
-                    continue 
+                    time.sleep(4)
                 else:
-                    print(f"\n{C_RED}[X] Invalid or Expired Key!{C_RESET}")
+                    print(f"\n{C_RED}[X] Invalid Key! Access Denied.{C_RESET}")
                     if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
                     saved_key = ""
                     sys.exit()
 
     except KeyboardInterrupt:
-        print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
+        print(f"\n{C_RED}[!] Interrupted.{C_RESET}")
 
 if __name__ == "__main__":
     main()
