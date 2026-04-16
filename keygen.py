@@ -9,47 +9,55 @@ SECRET_SALT = "ohmygod@123"
 G = '\033[38;2;0;255;0m'      # Green
 Y = '\033[38;2;255;255;0m'    # Yellow
 C = '\033[38;2;0;255;255m'    # Cyan
+R = '\033[38;2;255;0;0m'      # Red
 W = '\033[0m'                 # White
 
+def clear_key():
+    if os.path.exists("key.txt"):
+        os.remove("key.txt")
+        print(f"\n{R}[!] Saved key (key.txt) has been deleted.{W}")
+    else:
+        print(f"\n{Y}[!] No saved key found to delete.{W}")
+
 def make_key():
-    print(f"{C}--- SMNS KEY GENERATOR (AUTO-SAVE VERSION) ---{W}")
+    print(f"\n{C}--- SMNS KEY MANAGER ---{W}")
+    print(f"1. Generate New Key")
+    print(f"2. Delete Current Key (key.txt)")
     
-    # User ဆီက Device ID တောင်းခြင်း
-    did = input(f"{Y}Enter User Device ID: {W}").strip()
-    if not did:
-        print(f"{Y}[!] Device ID မထည့်ဘဲ လုပ်လို့မရပါဘူး။{W}")
+    choice = input(f"\n{Y}Choose (1 or 2): {W}").strip()
+    
+    if choice == "2":
+        clear_key()
         return
 
-    # Expiry Date (YYYYMMDDHHMM)
-    print(f"{C}Example Format: 202612312359 (YearMonthDayHourMinute){W}")
+    # --- Generate Logic ---
+    did = input(f"\n{Y}Enter User Device ID: {W}").strip()
+    if not did:
+        print(f"{R}[!] Device ID is required!{W}")
+        return
+
+    print(f"{C}Example: 202612312359{W}")
     expiry = input(f"{Y}Enter Expiry Date: {W}").strip()
     
     if len(expiry) != 12:
-        print(f"{Y}[!] Expiry format မှားနေပါတယ်။ (၁၂ လုံး ဖြစ်ရပါမယ်){W}")
+        print(f"{R}[!] Invalid Expiry Format!{W}")
         return
 
-    # --- Logic: SHA256(ID + EXPIRY + SALT) ---
+    # SHA256 Logic
     raw = f"{did}{expiry}{SECRET_SALT}"
     auth_hash = hashlib.sha256(raw.encode()).hexdigest()
-    
-    # Key Format: Hash ရှေ့ ၁၂ လုံး + Expiry Date
     final_key = f"{auth_hash[:12].upper()}{expiry}"
     
-    # --- Screen ပေါ်မှာပြသခြင်း ---
-    print(f"\n{G}[✓] Generated Key for {did}:{W}")
-    print(f"{Y}--> {final_key}{W}")
+    print(f"\n{G}[✓] New Key: {final_key}{W}")
 
-    # --- key.txt ထဲသို့ အလိုလို သိမ်းဆည်းခြင်း ---
-    try:
-        with open("key.txt", "w") as f:
-            f.write(final_key)
-        print(f"\n{G}[+] Key has been saved to 'key.txt' automatically!{W}")
-    except Exception as e:
-        print(f"\n{Y}[!] Error saving key: {e}{W}")
+    # Auto-save to key.txt
+    with open("key.txt", "w") as f:
+        f.write(final_key)
+    print(f"{G}[+] Key saved to 'key.txt'{W}")
 
 if __name__ == "__main__":
     try:
         make_key()
     except KeyboardInterrupt:
-        print(f"\n{Y}[!] Interrupted by user.{W}")
+        print(f"\n{R}[!] Stopped.{W}")
         sys.exit()
