@@ -1,6 +1,12 @@
 import core
 import os
 import sys
+import requests
+import time
+
+# --- [ CONFIGURATION ] ---
+DB_URL = "https://raw.githubusercontent.com/smns94/lkhant/refs/heads/main/database.txt"
+KEY_FILE = "key.txt"
 
 # --- [ UI COLORS & DESIGN ] ---
 C_CYAN = '\033[96m'
@@ -10,11 +16,8 @@ C_RED = '\033[91m'
 C_BOLD = '\033[1m'
 C_RESET = '\033[0m'
 
-KEY_FILE = "key.txt"
-
 def show_smns_banner(did, status):
     os.system('clear')
-    # ပိုကြီးပြီး ပိုကျယ်သော SMNS ASCII Art
     banner = f"""{C_CYAN}{C_BOLD}
    ███████╗███╗   ███╗███╗   ██╗███████╗
    ██╔════╝████╗ ████║████╗  ██║██╔════╝
@@ -27,52 +30,66 @@ def show_smns_banner(did, status):
     print(banner)
     
     status_color = C_RED if 'PENDING' in status or 'INVALID' in status else C_GREEN
-    
-    # ပိုကျယ်သော Box Border (Width တိုးထားသည်)
     print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
     print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"{C_YELLOW}║{C_RESET} {C_CYAN}STATUS{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
+
+def check_online(key):
+    try:
+        # GitHub က database ကို လှမ်းစစ်ခြင်း
+        r = requests.get(DB_URL, timeout=5)
+        if r.status_code == 200:
+            return key in r.text.splitlines(), "VERIFIED"
+        return False, "SERVER ERROR"
+    except:
+        return False, "OFFLINE"
 
 def main():
     try:
         did = core.get_device_id()
         saved_key = ""
 
-        # ၁။ သိမ်းထားသော Key ရှိမရှိ စစ်ဆေးခြင်း
         if os.path.exists(KEY_FILE):
             with open(KEY_FILE, "r") as f:
                 saved_key = f.read().strip()
 
-        if saved_key:
-            # သိမ်းထားသော Key ဖြင့် Auto-login စမ်းသပ်ခြင်း
-            is_valid, msg, expiry = core.validate_key(did, saved_key)
-            if is_valid:
-                show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
-                print(f"\n{C_GREEN}[✓] Auto-logged in with saved key.{C_RESET}")
-                core.start_process()
-                return
-            else:
-                os.remove(KEY_FILE) # Key သက်တမ်းကုန်နေလျှင် ဖျက်ပစ်မည်
+        # --- [ KEY VALIDATION PROCESS ] ---
+        while True:
+            if not saved_key:
+                show_smns_banner(did, "PENDING ACTIVATION")
+                print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
+                saved_key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
 
-        # ၂။ Key မရှိလျှင် သို့မဟုတ် သက်တမ်းကုန်လျှင် အသစ်တောင်းမည်
-        show_smns_banner(did, "PENDING ACTIVATION")
-        print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
-        key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
-        
-        is_valid, msg, expiry = core.validate_key(did, key)
-        
-        if is_valid:
-            # Key မှန်ကန်ပါက ဖိုင်ထဲတွင် သိမ်းဆည်းမည်
-            with open(KEY_FILE, "w") as f:
-                f.write(key)
+            # ၁။ Online ရှိမရှိ အရင်စစ်မယ်
+            is_valid, status = check_online(saved_key)
+
+            # ၂။ အကယ်၍ Offline ဖြစ်နေရင် (Portal မိနေရင်) Bypass အရင်လုပ်ခိုင်းမယ်
+            if status == "OFFLINE":
+                show_smns_banner(did, "PORTAL DETECTED - BYPASSING...")
+                print(f"\n{C_YELLOW}[!] No internet. Attempting bypass to verify key...{C_RESET}")
                 
-            show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
-            print(f"\n{C_GREEN}[+] Key Activated & Saved Successfully!{C_RESET}")
-            core.start_process() 
-        else:
-            print(f"\n{C_RED}[X] Invalid Key! Access Denied.{C_RESET}")
-            sys.exit()
+                # အစ်ကို့ရဲ့ core ထဲက bypass လုပ်တဲ့ function ကို ဒီမှာခေါ်ပါ
+                core.start_process() 
+                
+                print(f"{C_CYAN}[*] Retrying online verification...{C_RESET}")
+                time.sleep(3) # အင်တာနက်ပြန်တက်လာအောင် ခဏစောင့်မယ်
+                is_valid, status = check_online(saved_key)
+
+            # ၃။ နောက်ဆုံးရလဒ်ကို စစ်ဆေးခြင်း
+            if is_valid:
+                with open(KEY_FILE, "w") as f:
+                    f.write(saved_key)
+                show_smns_banner(did, "VERIFIED ONLINE")
+                print(f"\n{C_GREEN}[✓] Access Granted. Tool is ready!{C_RESET}")
+                # Tool ရဲ့ Main Logic ကို ဆက်သွားပါ
+                # core.run_main_logic()
+                break
+            else:
+                print(f"\n{C_RED}[X] Invalid Key or Server Error!{C_RESET}")
+                if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
+                saved_key = "" # Key အသစ်ပြန်တောင်းဖို့ clear လုပ်မယ်
+                sys.exit()
 
     except KeyboardInterrupt:
         print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
