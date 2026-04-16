@@ -1,61 +1,81 @@
+import core
+import os
 import sys
-import shutil
 
-# Color Codes (အရောင်ဆန်းလေးများ)
-# အစ်ကိုကြိုက်တဲ့အရောင်ကို အောက်က C1, C2 နဲ့ အစားထိုးသုံးနိုင်ပါတယ်
-C1 = '\033[38;2;0;255;255m'    # Cyan (အပြာနုရောင်ဆန်း)
-C2 = '\033[38;2;255;0;255m'    # Magenta (ပန်းခရမ်းရောင်)
-C3 = '\033[38;2;255;255;255m'  # White (အဖြူရောင်)
-G = '\033[92m'  # Green (အစိမ်းရောင်)
-Y = '\033[93m'  # Yellow (အဝါရောင်)
-W = '\033[0m'   # Reset (ပုံမှန်အရောင်ပြန်ဖြစ်စေရန်)
+# --- [ UI COLORS & DESIGN ] ---
+C_CYAN = '\033[96m'
+C_GREEN = '\033[92m'
+C_YELLOW = '\033[93m'
+C_RED = '\033[91m'
+C_BOLD = '\033[1m'
+C_RESET = '\033[0m'
 
-# Termux clear
-print("\033[H\033[J", end="")
+KEY_FILE = "key.txt"
 
-# Screen width ယူခြင်း (အလယ် center ထားရန်)
-size = shutil.get_terminal_size()
-width = size.columns
+def show_smns_banner(did, status):
+    os.system('clear')
+    # ပိုကြီးပြီး ပိုကျယ်သော SMNS ASCII Art
+    banner = f"""{C_CYAN}{C_BOLD}
+   ███████╗███╗   ███╗███╗   ██╗███████╗
+   ██╔════╝████╗ ████║████╗  ██║██╔════╝
+   ███████╗██╔████╔██║██╔██╗ ██║███████╗
+   ╚════██║██║╚██╔╝██║██║╚██╗██║╚════██║
+   ███████║██║ ╚═╝ ██║██║ ╚████║███████║
+   ╚══════╝╚═╝     ╚═╝╚═╝  ╚═══╝╚══════╝
+      >>> {C_YELLOW}VOUCHER BYPASS SYSTEM v2.0{C_CYAN} <<< {C_RESET}
+    """
+    print(banner)
+    
+    status_color = C_RED if 'PENDING' in status or 'INVALID' in status else C_GREEN
+    
+    # ပိုကျယ်သော Box Border (Width တိုးထားသည်)
+    print(f"{C_YELLOW}╔══════════════════════════════════════════════════════╗{C_RESET}")
+    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}DEVICE ID{C_RESET} : {C_GREEN}{did:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
+    print(f"{C_YELLOW}║{C_RESET} {C_CYAN}STATUS{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
+    print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
 
-# ကြီးမားတဲ့ SMNS ASCII Art (Title)
-# ဒါကို ကြီးကြီးမားမားနဲ့ C1 အရောင် (Cyan) နဲ့ပြပါမယ်
-banner = f"""{C1}
-  ██████  ███▄ ▄███▒ ███▄    █   ██████ 
-▒██    ▒  ▓██▒▀█▀ ██▒ ██ ▀█   █ ▒██    ▒ 
-░ ▓██▄    ▓██    ▓██░▓██  ▀█ ██▒░ ▓██▄   
-  ▒   ██▒ ▒██    ▒██ ▓██▒  ▐▌██▒  ▒   ██▒
-▒██████▒▒ ▒██▒   ░██▒▒██░   ▓██░▒██████▒▒
-▒ ▒▓▒ ▒ ░ ░ ▒░   ░  ░░ ▒░   ▒ ▒ ▒ ▒▓▒ ▒ ░
-░ ░▒  ░ ░ ░  ░      ░░ ░░   ░ ▒░░ ░▒  ░ ░
-░  ░  ░   ░      ░      ░   ▒ ░░  ░  ░   
-      ░          ░            ░        ░ 
-"""
+def main():
+    try:
+        did = core.get_device_id()
+        saved_key = ""
 
-# SMNS Voucher Bypass Toolkit (C2 Magenta အရောင်နဲ့ ပြပါမယ်)
-sub_title = f"{C2}>>> SMNS VOUCHER BYPASS TOOLKIT <<<{W}"
+        # ၁။ သိမ်းထားသော Key ရှိမရှိ စစ်ဆေးခြင်း
+        if os.path.exists(KEY_FILE):
+            with open(KEY_FILE, "r") as f:
+                saved_key = f.read().strip()
 
-# Function to center text (စာသားကို အလယ်ပို့ပေးမယ့် function)
-def center_text(text, w):
-    centered = ""
-    for line in text.split('\n'):
-        # စာသားအရှည်ကိုအရင်တိုင်း၊ padding တွက်ပြီး အလယ် center မှာထားမယ်
-        centered += line.center(w) + "\n"
-    return centered
+        if saved_key:
+            # သိမ်းထားသော Key ဖြင့် Auto-login စမ်းသပ်ခြင်း
+            is_valid, msg, expiry = core.validate_key(did, saved_key)
+            if is_valid:
+                show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
+                print(f"\n{C_GREEN}[✓] Auto-logged in with saved key.{C_RESET}")
+                core.start_process()
+                return
+            else:
+                os.remove(KEY_FILE) # Key သက်တမ်းကုန်နေလျှင် ဖျက်ပစ်မည်
 
-# Title နဲ့ Sub-title ကို အလယ်ပို့ပြီး ပြသခြင်း
-# width ထက် နည်းနည်းလျော့တွက်ပြီး center ကျအောင် လုပ်ထားပါတယ်
-c_banner = center_text(banner, int(width * 0.98))
-c_sub_title = sub_title.center(width)
+        # ၂။ Key မရှိလျှင် သို့မဟုတ် သက်တမ်းကုန်လျှင် အသစ်တောင်းမည်
+        show_smns_banner(did, "PENDING ACTIVATION")
+        print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
+        key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
+        
+        is_valid, msg, expiry = core.validate_key(did, key)
+        
+        if is_valid:
+            # Key မှန်ကန်ပါက ဖိုင်ထဲတွင် သိမ်းဆည်းမည်
+            with open(KEY_FILE, "w") as f:
+                f.write(key)
+                
+            show_smns_banner(did, f"VERIFIED (EXP: {expiry})")
+            print(f"\n{C_GREEN}[+] Key Activated & Saved Successfully!{C_RESET}")
+            core.start_process() 
+        else:
+            print(f"\n{C_RED}[X] Invalid Key! Access Denied.{C_RESET}")
+            sys.exit()
 
-# Print Banner and Sub-title
-print(c_banner)
-print(c_sub_title)
-print(f"{Y}" + "─" * width + f"{W}\n") # Line separator
+    except KeyboardInterrupt:
+        print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
 
-# အစ်ကို့ရဲ့ ကျန်တဲ့ Tool Info command တွေကို ဒီအောက်မှာ ဆက်ရေးပါ
-print(f"{G}[✔] DEVICE ID : {W}TRB-49417534BE")
-print(f"{G}[✔] EXPIRED   : {W}ACTIVATED (EXP: 2027-04-13 12:25:00)")
-print(f"\n{G}[✓] Auto-logged in with saved key.{W}")
-print(f"{Y}[*] STAGE 1: EXECUTING INSTANT BYPASS (VOUCHER INJECTION){W}")
-print("...")
-print(f"\n{G}[+] INTERNET ACCESS ACTIVE. AI OPTIMIZER ENABLED!{W}")
+if __name__ == "__main__":
+    main()
