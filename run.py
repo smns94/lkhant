@@ -3,6 +3,7 @@ import os
 import sys
 import requests
 import time
+from datetime import datetime
 
 # --- [ CONFIGURATION ] ---
 DB_URL = "https://raw.githubusercontent.com/smns94/lkhant/refs/heads/main/database.txt"
@@ -36,13 +37,24 @@ def show_smns_banner(did, status):
     print(f"{C_YELLOW}║{C_RESET} {C_CYAN}STATUS{C_RESET}    : {status_color}{status:<39}{C_RESET} {C_YELLOW}║{C_RESET}")
     print(f"{C_YELLOW}╚══════════════════════════════════════════════════════╝{C_RESET}")
 
+def extract_expiry(key):
+    # Key ရဲ့ နောက်ဆုံး ၁၂ လုံးက ရက်စွဲဖြစ်လို့ ဖြတ်ယူပြီး Format ပြောင်းတာပါ
+    try:
+        raw_date = key[-12:]
+        formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]} {raw_date[8:10]}:{raw_date[10:12]}"
+        return formatted_date
+    except:
+        return "UNKNOWN"
+
 def check_online_key(key):
     try:
         r = requests.get(DB_URL, timeout=7)
         if r.status_code == 200:
             approved_keys = [line.strip() for line in r.text.splitlines() if line.strip()]
-            return key.strip() in approved_keys, "SUCCESS"
-        return False, "SERVER_ERROR"
+            if key.strip() in approved_keys:
+                return True, "VERIFIED"
+            return False, "INVALID KEY"
+        return False, "SERVER ERROR"
     except:
         return False, "OFFLINE"
 
@@ -55,7 +67,7 @@ def main():
             with open(KEY_FILE, "r") as f:
                 saved_key = f.read().strip()
 
-        # ၁။ အရင်ဆုံး Bypass အမြဲလုပ်မယ်
+        # ၁။ အရင်ဆုံး Bypass အမြဲလုပ်မယ် (Portal ကျော်ရန်)
         show_smns_banner(did, "INITIALIZING BYPASS...")
         print(f"\n{C_CYAN}[*] Running Bypass Tasks... Please wait.{C_RESET}")
         core.start_process()
@@ -68,15 +80,18 @@ def main():
                 print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
                 saved_key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
 
-            print(f"{C_CYAN}[*] Verifying Key Online...{C_RESET}")
             is_valid, status = check_online_key(saved_key)
 
             if is_valid:
+                # Expire Date ကို Key ထဲကနေ ထုတ်ယူမယ်
+                exp_date = extract_expiry(saved_key)
+                
                 with open(KEY_FILE, "w") as f:
                     f.write(saved_key)
-                show_smns_banner(did, "VERIFIED ONLINE")
-                print(f"\n{C_GREEN}[✓] Access Granted! Tool is ready.{C_RESET}")
-                # ဒီအောက်မှာ core ထဲက main_menu ခေါ်လို့ရပါပြီ
+                
+                show_smns_banner(did, f"VERIFIED (EXP: {exp_date})")
+                print(f"\n{C_GREEN}[✓] Access Granted! Status: Active.{C_RESET}")
+                # core.main_menu() # လိုအပ်လျှင် ဒီမှာခေါ်ပါ
                 return
             else:
                 if status == "OFFLINE":
@@ -88,13 +103,10 @@ def main():
                     print(f"\n{C_RED}[X] Invalid or Expired Key!{C_RESET}")
                     if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
                     saved_key = ""
-                    # Key မှားရင် Tool ပိတ်သွားအောင် လုပ်ထားပါတယ်
                     sys.exit()
 
     except KeyboardInterrupt:
         print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
-    except Exception as e:
-        print(f"\n{C_RED}[!] Error: {e}{C_RESET}")
 
 if __name__ == "__main__":
     main()
