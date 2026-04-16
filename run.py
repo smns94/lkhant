@@ -38,7 +38,6 @@ def show_smns_banner(did, status):
 
 def check_online_key(key):
     try:
-        # GitHub က database ကို strip() သုံးပြီး သေချာဖတ်ခြင်း
         r = requests.get(DB_URL, timeout=7)
         if r.status_code == 200:
             approved_keys = [line.strip() for line in r.text.splitlines() if line.strip()]
@@ -52,37 +51,50 @@ def main():
         did = core.get_device_id()
         saved_key = ""
 
-        # ၁။ သိမ်းထားသော Key ရှိမရှိ စစ်ဆေးခြင်း
         if os.path.exists(KEY_FILE):
             with open(KEY_FILE, "r") as f:
                 saved_key = f.read().strip()
 
-        # ၂။ အမြဲတမ်း အရင်ဆုံး Bypass အလုပ်ကို လုပ်ခိုင်းမည်
+        # ၁။ အရင်ဆုံး Bypass အမြဲလုပ်မယ်
         show_smns_banner(did, "INITIALIZING BYPASS...")
         print(f"\n{C_CYAN}[*] Running Bypass Tasks... Please wait.{C_RESET}")
-        core.start_process() # မူရင်း bypass function
-        
-        # Bypass လုပ်ပြီး အင်တာနက်တည်ငြိမ်အောင် ခဏစောင့်မည်
+        core.start_process()
         time.sleep(3)
 
-        # ၃။ Key Validation စတင်ခြင်း
+        # ၂။ Key Validation
         while True:
             if not saved_key:
                 show_smns_banner(did, "PENDING ACTIVATION")
                 print(f"\n{C_CYAN}[?] Enter Activation Key to continue{C_RESET}")
                 saved_key = input(f"{C_GREEN}root@turbo:~# {C_RESET}").strip().upper()
 
-            # Online စစ်ဆေးခြင်း
             print(f"{C_CYAN}[*] Verifying Key Online...{C_RESET}")
             is_valid, status = check_online_key(saved_key)
 
             if is_valid:
-                # Key မှန်ကန်ပါက သိမ်းဆည်းမည်
                 with open(KEY_FILE, "w") as f:
                     f.write(saved_key)
-                
                 show_smns_banner(did, "VERIFIED ONLINE")
-                print(f"\n{C_GREEN}[✓] Access Granted! Enjoy your tool.{C_RESET}")
-                
-                # အကယ်၍ အစ်ကို့ core ထဲမှာ Menu ပြစရာရှိရင် ဒီမှာခေါ်ပါ
-                # core.main_menu
+                print(f"\n{C_GREEN}[✓] Access Granted! Tool is ready.{C_RESET}")
+                # ဒီအောက်မှာ core ထဲက main_menu ခေါ်လို့ရပါပြီ
+                return
+            else:
+                if status == "OFFLINE":
+                    print(f"\n{C_YELLOW}[!] Still Offline. Retrying Bypass...{C_RESET}")
+                    core.start_process()
+                    time.sleep(5)
+                    continue 
+                else:
+                    print(f"\n{C_RED}[X] Invalid or Expired Key!{C_RESET}")
+                    if os.path.exists(KEY_FILE): os.remove(KEY_FILE)
+                    saved_key = ""
+                    # Key မှားရင် Tool ပိတ်သွားအောင် လုပ်ထားပါတယ်
+                    sys.exit()
+
+    except KeyboardInterrupt:
+        print(f"\n{C_RED}[!] Stopped by user.{C_RESET}")
+    except Exception as e:
+        print(f"\n{C_RED}[!] Error: {e}{C_RESET}")
+
+if __name__ == "__main__":
+    main()
